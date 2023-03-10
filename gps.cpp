@@ -231,10 +231,10 @@ void gps_setup() {
     0x00, 0x00, 0x56, 0x76
   };
   delay(300);    // Delay slightly before sending the command
-  if (Serial.write( (unsigned char *)&SetCfgNav5, sizeof(SetCfgNav5)) != sizeof(SetCfgNav5)) {
+  if (GPS_SERIAL.write( (unsigned char *)&SetCfgNav5, sizeof(SetCfgNav5)) != sizeof(SetCfgNav5)) {
     //Serial.println("ERROR: Init string");
   }
-  Serial.flush();
+  GPS_SERIAL.flush();
   delay(200);
 
   strcpy(gps_time, "000000");

@@ -37,6 +37,7 @@
 #include "config.h"
 #include "afsk_avr.h"
 #include "afsk_pic32.h"
+#include "afsk_esp32.h"
 #include "aprs.h"
 #include "buzzer.h"
 #include "gps.h"
@@ -44,6 +45,7 @@
 #include "power.h"
 #include "sensors_avr.h"
 #include "sensors_pic32.h"
+#include "sensors_esp32.h"
 
 // Arduino/AVR libs
 #if (ARDUINO + 1) >= 100
@@ -58,13 +60,15 @@ static const uint32_t VALID_POS_TIMEOUT = 2000;  // ms
 // Module variables
 static int32_t next_aprs = 0;
 
-
 void setup()
 {
   pinMode(LED_PIN, OUTPUT);
   pin_write(LED_PIN, LOW);
 
   Serial.begin(GPS_BAUDRATE);
+#ifdef ESP32
+  GPS_SERIAL.begin(GPS_BAUDRATE, SERIAL_8N1, 16, 17);    // Serial2 is typically on GPIO16/17
+#endif //ESP32
 #ifdef DEBUG_RESET
   Serial.println("RESET");
 #endif
@@ -87,9 +91,9 @@ void setup()
   // for slotted transmissions.
   if (APRS_SLOT >= 0) {
     do {
-      while (! Serial.available())
+      while (! GPS_SERIAL.available())
         power_save();
-    } while (! gps_decode(Serial.read()));
+    } while (! gps_decode(GPS_SERIAL.read()));
     
     next_aprs = millis() + 1000 *
       (APRS_PERIOD - (gps_seconds + APRS_PERIOD - APRS_SLOT) % APRS_PERIOD);
@@ -114,17 +118,23 @@ void get_pos()
   gps_reset_parser();
 
   do {
-    if (Serial.available())
+    if (GPS_SERIAL.available())
       valid_pos = gps_decode(Serial.read());
   } while ( (millis() - timeout < VALID_POS_TIMEOUT) && ! valid_pos) ;
 
   if (valid_pos) {
+  #ifdef DEBUG_GPS
+    Serial.println("Valid position");
+  #endif // DEBUG_GPS
     if (gps_altitude > BUZZER_ALTITUDE) {
       buzzer_off();   // In space, no one can hear you buzz
     } else {
       buzzer_on();
     }
   }
+#ifdef DEBUG_GPS
+    Serial.println("\nGot Position");
+#endif // DEBUG_GPS
 }
 
 void loop()
@@ -145,8 +155,8 @@ void loop()
 
   } else {
     // Discard GPS data received during sleep window
-    while (Serial.available()) {
-      Serial.read();
+    while (GPS_SERIAL.available()) {
+      GPS_SERIAL.read();
     }
   }
 
