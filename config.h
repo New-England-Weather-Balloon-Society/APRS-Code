@@ -83,11 +83,16 @@
 // 00:02:00, etc. and the second balloon will transmit at 00:00:30, 00:01:30,
 // 00:02:30, etc.
 #define APRS_SLOT     0     // seconds. -1 disables slotted transmissions
-#define APRS_PERIOD   60    // seconds
+#define APRS_PERIOD   20    // seconds
 
 // GPS baud rate (in bits per second). This is also the baud rate at which
 // debug data will be printed out the serial port.
 #define GPS_BAUDRATE  9600
+#ifdef ESP32
+#define GPS_SERIAL  Serial2
+#else
+#define GPS_SERIAL  Serial
+#endif //ESP32
 
 
 // --------------------------------------------------------------------------
@@ -98,7 +103,7 @@
 // PWM, so the only two options are pins 3 and 11.
 // Pin 11 doubles as MOSI, so I suggest using pin 3 for PWM and leave 11 free
 // in case you ever want to interface with an SPI device.
-#define AUDIO_PIN       3
+#define AUDIO_PIN       25    // ESP32 DAC pin is on 25
 
 // Pre-emphasize the 2200 tone by 6 dB. This is actually done by 
 // de-emphasizing the 1200 tone by 6 dB and it might greatly improve
@@ -111,7 +116,7 @@
 // --------------------------------------------------------------------------
 
 // This is the PTT pin
-#define PTT_PIN           4
+#define PTT_PIN           26    // ESP32 pin for PTT
 
 // --------------------------------------------------------------------------
 // Sensors config (sensors.cpp)
@@ -186,6 +191,9 @@
 
 // The options here are pin 9 or 10
 #define BUZZER_PIN              9
+#ifdef ESP32
+#define BUZZER_PIN 12           // Just pick a random out-of-the-way pin
+#endif //ESP32
 
 // --------------------------------------------------------------------------
 // Debug
@@ -214,11 +222,11 @@
 // 3. When flashing the firmware, disconnect the GPS from the RX pin or you
 //    will get errors.
 
-// #define DEBUG_GPS    // GPS sentence dump and checksum validation
+#define DEBUG_GPS    // GPS sentence dump and checksum validation
 // #define DEBUG_AX25   // AX.25 frame dump
 // #define DEBUG_MODEM  // Modem ISR overrun and profiling
 // #define DEBUG_AFSK   // AFSK (modulation) output
-// #define DEBUG_RESET  // AVR reset
+#define DEBUG_RESET  // AVR reset
 // #define DEBUG_SENS   // Sensors
 
 
